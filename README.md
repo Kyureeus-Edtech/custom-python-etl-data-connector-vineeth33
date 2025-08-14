@@ -1,136 +1,78 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/b1x675tx)
-# SSN-college-software-architecture-Assignments-
-Assignment repository for building custom Python ETL data connectors (Kyureeus EdTech, SSN CSE). Students: Submit your ETL scripts here. Make sure your commit message includes your name and roll number.
-# Software Architecture Assignment: Custom Python ETL Data Connector
+# Custom ETL Connector: Open Trivia Database
 
-Welcome to the official repository for submitting your Software Architecture assignment on building custom data connectors (ETL pipelines) in Python. This assignment is part of the Kyureeus EdTech program for SSN CSE students.
+This project is a custom ETL (Extract, Transform, Load) data connector built in Python. It fetches computer science trivia questions from the [Open Trivia Database API](https://opentdb.com/), transforms the data into a clean format, and loads it into a MongoDB collection.
 
----
-Guideline: Building and Managing Custom Data Connectors (ETL Pipeline) in Python
+This was created for the SSN College of Engineering Software Architecture assignment.
 
-1. Setting Up the Connector Environment
-a. Choose Your API Provider: Identify a data provider and understand its Base URL, Endpoints, and Authentication.
-b. Understand the API Documentation: Focus on headers, query params, pagination, rate limits, and response structure.
+## ETL Process
 
+- **Extract**: Fetches 15 multiple-choice questions from the "Science: Computers" category.
+- **Transform**:
+  - Decodes HTML entities (e.g., `&quot;` becomes `"`).
+  - Combines the correct and incorrect answers into a single `all_answers` array.
+  - Adds a `ingestion_timestamp` field to each document.
+- **Load**: Clears the target collection and inserts the new data into a MongoDB collection named `trivia_questions_raw`.
 
-2. Secure API Authentication Using Environment Variables
-a. Create a `.env` File Locally: Store API keys and secrets as KEY=VALUE pairs.
-b. Load Environment Variables in Code: Use libraries like `dotenv` to securely load environment variables.
+## Project Structure
 
+```
+/
+├── etl_connector.py      # The main Python script for the ETL pipeline
+├── .env                  # Stores the MongoDB connection URI (not committed)
+├── requirements.txt      # Lists all Python dependencies
+└── README.md             # This documentation file
+```
 
-3. Design the ETL Pipeline
-Extract: Connect to the API, pass tokens/headers, and collect JSON data.
-Transform: Clean or reformat the data for MongoDB compatibility.
-Load: Store the transformed data into a MongoDB collection.
+## How to Run
 
+1.  **Clone the Repository**:
 
-4. MongoDB Collection Strategy
-Use one collection per connector, e.g., `connector_name_raw`.
-Store ingestion timestamps to support audits or updates.
+    ```bash
+    git clone <your-repo-url>
+    cd <your-repo-folder>
+    ```
 
+2.  **Set Up a Virtual Environment** (Recommended):
 
-5. Iterative Testing & Validation
-Test for invalid responses, empty payloads, rate limits, and connectivity errors.
-Ensure consistent insertion into MongoDB.
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+    ```
 
+3.  **Install Dependencies**:
 
-6. Git and Project Structure Guidelines
-a. Use a Central Git Repository: Clone the shared repo and create a new branch for your connector.
-b. Ignore Secrets: Add `.env` to `.gitignore` before the first commit.
-c. Push and Document: Write README.md with endpoint details, API usage, and example output.
+    ```bash
+    pip install -r requirements.txt
+    ```
 
+4.  **Create `.env` File**:
+    Create a file named `.env` in the root directory and add your MongoDB connection string:
 
-Final Checklist for Students
-Understand API documentation
-Secure credentials in `.env`
-Build complete ETL script
-Validate MongoDB inserts
-Push code to your branch
-Include descriptive README
-Submit Pull Request
+    ```env
+    MONGO_URI="mongodb://localhost:27017/"
+    ```
 
-## 📋 Assignment Overview
+5.  **Run the Script**:
+    ```bash
+    python etl_connector.py
+    ```
 
-**Goal:**  
-Develop a Python script to connect with an API provider, extract data, transform it for compatibility, and load it into a MongoDB collection. Follow secure coding and project structure practices as outlined below.
+## Example Output in MongoDB
 
----
+After running the script, you will find documents in your MongoDB database (`ssn_assignment_db` -> `trivia_questions_raw`) with the following structure:
 
-## ✅ Submission Checklist
-
-- [ ] Choose a data provider (API) and understand its documentation
-- [ ] Secure all API credentials using a `.env` file
-- [ ] Build a complete ETL pipeline: Extract → Transform → Load (into MongoDB)
-- [ ] Test and validate your pipeline (handle errors, invalid data, rate limits, etc.)
-- [ ] Follow the provided Git project structure
-- [ ] Write a clear and descriptive `README.md` in your folder with API details and usage instructions
-- [ ] **Include your name and roll number in your commit messages**
-- [ ] Push your code to your branch and submit a Pull Request
-
----
-
-## 📦 Project Structure
-
-/your-branch-name/
-├── etl_connector.py
-├── .env
-├── requirements.txt
-├── README.md
-└── (any additional scripts or configs)
-
-
-- **`.env`**: Store sensitive credentials; do **not** commit this file.
-- **`etl_connector.py`**: Your main ETL script.
-- **`requirements.txt`**: List all Python dependencies.
-- **`README.md`**: Instructions for your connector.
-
----
-
-## 🛡️ Secure Authentication
-
-- Store all API keys/secrets in a local `.env` file.
-- Load credentials using the `dotenv` Python library.
-- Add `.env` to `.gitignore` before committing.
-
----
-
-## 🗃️ MongoDB Guidelines
-
-- Use one MongoDB collection per connector (e.g., `connectorname_raw`).
-- Store ingestion timestamps for audit and update purposes.
-
----
-
-## 🧪 Testing & Validation
-
-- Check for invalid responses, empty payloads, rate limits, and connectivity issues.
-- Ensure data is correctly inserted into MongoDB.
-
----
-
-## 📝 Git & Submission Guidelines
-
-1. **Clone the repository** and create your own branch.
-2. **Add your code and documentation** in your folder/branch.
-3. **Do not commit** your `.env` or secrets.
-4. **Write clear commit messages** (include your name and roll number).
-5. **Submit a Pull Request** when done.
-
----
-
-## 💡 Additional Resources
-
-- [python-dotenv Documentation](https://saurabh-kumar.com/python-dotenv/)
-- [MongoDB Python Driver (PyMongo)](https://pymongo.readthedocs.io/en/stable/)
-- [API Documentation Example](https://restfulapi.net/)
-
----
-
-## 📢 Need Help?
-
-- Post your queries in the [KYUREEUS/SSN College - WhatsApp group](#) .
-- Discuss issues, share progress, and help each other.
-
----
-
-Happy coding! 🚀
+```json
+{
+  "_id": {
+    "$oid": "670a5d4c9f1e8a3b7c9e5b2a"
+  },
+  "category": "Science: Computers",
+  "difficulty": "hard",
+  "question": "What was the name of the security vulnerability found in Bash in 2014?",
+  "correct_answer": "Shellshock",
+  "all_answers": ["Heartbleed", "Bashbug", "Stagefright", "Shellshock"],
+  "ingestion_timestamp": {
+    "$date": "2025-08-14T06:30:04.123Z"
+  }
+}
+```
