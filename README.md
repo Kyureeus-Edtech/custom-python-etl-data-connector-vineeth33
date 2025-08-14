@@ -1,78 +1,71 @@
-# Custom ETL Connector: Open Trivia Database
+# Custom ETL Connector: DShield Top Attackers
 
-This project is a custom ETL (Extract, Transform, Load) data connector built in Python. It fetches computer science trivia questions from the [Open Trivia Database API](https://opentdb.com/), transforms the data into a clean format, and loads it into a MongoDB collection.
+This project is a custom ETL (Extract, Transform, Load) data connector built in Python. It fetches a list of the top 100 attacking IP addresses from the [DShield API](https://www.dshield.org/api.html), parses the plain text data, and loads it into a MongoDB collection.
 
-This was created for the SSN College of Engineering Software Architecture assignment.
+This demonstrates parsing non-JSON data and was created for the SSN College of Engineering Software Architecture assignment.
 
 ## ETL Process
 
-- **Extract**: Fetches 15 multiple-choice questions from the "Science: Computers" category.
-- **Transform**:
-  - Decodes HTML entities (e.g., `&quot;` becomes `"`).
-  - Combines the correct and incorrect answers into a single `all_answers` array.
-  - Adds a `ingestion_timestamp` field to each document.
-- **Load**: Clears the target collection and inserts the new data into a MongoDB collection named `trivia_questions_raw`.
+* **Extract**: Fetches a raw, tab-separated text file from the DShield `ipsascii.html` endpoint.
+* **Transform**:
+    * Skips all comment lines and the header row.
+    * Parses each tab-delimited line into a structured Python dictionary.
+    * Converts string values to appropriate data types (e.g., `integer` for attack counts, `datetime` for timestamps).
+    * Adds an `ingestion_timestamp` to each record.
+* **Load**: Clears the target collection and inserts the new data into a MongoDB collection named `top_attackers`.
 
-## Project Structure
+## Project Setup
 
+### 1. Configure Environment
+This API does not require an authentication key. You only need to configure your MongoDB connection.
+
+Create a file named `.env` in the root directory and add your MongoDB connection string:
+
+```env
+MONGO_URI="mongodb://localhost:27017/"
 ```
-/
-├── etl_connector.py      # The main Python script for the ETL pipeline
-├── .env                  # Stores the MongoDB connection URI (not committed)
-├── requirements.txt      # Lists all Python dependencies
-└── README.md             # This documentation file
+
+### 2. Install & Run
+Follow these steps to run the pipeline:
+
+```bash
+# Set up a virtual environment (recommended)
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the ETL script
+python etl_connector.py
 ```
-
-## How to Run
-
-1.  **Clone the Repository**:
-
-    ```bash
-    git clone <your-repo-url>
-    cd <your-repo-folder>
-    ```
-
-2.  **Set Up a Virtual Environment** (Recommended):
-
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
-    ```
-
-3.  **Install Dependencies**:
-
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-4.  **Create `.env` File**:
-    Create a file named `.env` in the root directory and add your MongoDB connection string:
-
-    ```env
-    MONGO_URI="mongodb://localhost:27017/"
-    ```
-
-5.  **Run the Script**:
-    ```bash
-    python etl_connector.py
-    ```
 
 ## Example Output in MongoDB
 
-After running the script, you will find documents in your MongoDB database (`ssn_assignment_db` -> `trivia_questions_raw`) with the following structure:
+After running the script, you will find documents in your MongoDB database (`dshield_db` -> `top_attackers`) with the following structure:
 
 ```json
 {
   "_id": {
-    "$oid": "670a5d4c9f1e8a3b7c9e5b2a"
+    "$oid": "670a7b5d8f6e1d2c3b4a9f1e"
   },
-  "category": "Science: Computers",
-  "difficulty": "hard",
-  "question": "What was the name of the security vulnerability found in Bash in 2014?",
-  "correct_answer": "Shellshock",
-  "all_answers": ["Heartbleed", "Bashbug", "Stagefright", "Shellshock"],
+  "ip_address": "223.165.2.149",
+  "reports": 487532,
+  "targets": 5586,
+  "attacks": 1618256,
+  "first_seen": {
+    "$date": "2025-08-14T00:00:00.000Z"
+  },
+  "last_seen": {
+    "$date": "2025-08-14T08:00:00.000Z"
+  },
+  "location": {
+    "country_code": "IN",
+    "country_name": "India",
+    "city": "Thiruporur"
+  },
   "ingestion_timestamp": {
-    "$date": "2025-08-14T06:30:04.123Z"
+    "$date": "2025-08-14T14:30:00.123Z"
   }
 }
 ```
